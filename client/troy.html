@@ -4,25 +4,14 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Canvas Sandbox</title>
+  <title>Troy.io</title>
   <meta name="description" content="A canvas sandbox.">
   <meta name="author" content="Jordan Johnson">
 
   <link rel="stylesheet" 
         href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" 
         integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
-  <link rel="stylesheet" href="/css/style.css">
-  
-  <style>
-    .vertical-center {
-      min-height: 100%;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      width: 100%;
-      justify-content: center;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 
   <!--[if lt IE 9]>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
@@ -58,10 +47,20 @@
       </div>
     </div>
   </div>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://code.jquery.com/jquery-3.2.1.min.js"
-          integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-          crossorigin="anonymous"></script>
-  <script src="/js/main.js"></script>
+
+  <script src="js/troyServer.js"></script>
+  <script>
+    
+    function loadCanvas(){  
+      document.body.innerHTML = "";
+      var canvas = document.createElement('canvas');
+      canvas.setAttribute('height', window.innerHeight);
+      canvas.setAttribute('width', window.innerWidth);
+      canvas.setAttribute('style','border: 1px solid black;');
+      document.body.append(canvas);
+    }
+    
+    //loadCanvas();
+  </script>
 </body>
 </html>
