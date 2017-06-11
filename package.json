@@ -1,18 +1,11 @@
 {
-  "name": "canvas-sandbox",
+  "name": "paint-the-floor",
   "version": "1.0.0",
-  "description": "A sandbox for using server-driven canvas.",
-  "main": "server2.js",
+  "description": "Paint more of the floor than your opponents. Beware getting trapped! Web game developed with Node JS, socket.io, and HTML5 canvas.",
+  "main": "server.js",
   "dependencies": {
-    "async": "^0.2.10",
     "express": "^4.15.3",
     "socket.io": "^2.0.1"
   },
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server2.js"
-  },
-  "author": "",
-  "license": "ISC"
+  "author": "Jordan Johnson"
 }
