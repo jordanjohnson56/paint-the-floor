@@ -59,42 +59,49 @@ class GameRoom {
     // Note: will be removed once lobbies are set up.
     this.player1 = {
       id: '1',
+      name: 'blinky',
       x: Math.floor(Math.random() * this.grid_w),
       y: Math.floor(Math.random() * this.grid_h),
       color: COLORS[1],
-      dir: Math.floor(Math.random() * 4)
+      dir: Math.floor(Math.random() * 4),
+      score: 123
     };
     
     this.player2 = {
       id: '2',
+      name: 'inky',
       x: Math.floor(Math.random() * this.grid_w),
       y: Math.floor(Math.random() * this.grid_h),
       color: COLORS[2],
-      dir: Math.floor(Math.random() * 4)
+      dir: Math.floor(Math.random() * 4),
+      score: 234
     };
     
     this.player3 = {
       id: '3',
+      name: 'pinky',
       x: Math.floor(Math.random() * this.grid_w),
       y: Math.floor(Math.random() * this.grid_h),
       color: COLORS[3],
-      dir: Math.floor(Math.random() * 4)
+      dir: Math.floor(Math.random() * 4),
+      score: 345
     };
     
-    this.player4 = {
-      id: '4',
-      x: Math.floor(Math.random() * this.grid_w),
-      y: Math.floor(Math.random() * this.grid_h),
-      color: COLORS[4],
-      dir: Math.floor(Math.random() * 4)
-    };
+    // this.player4 = {
+    //   id: '4',
+    //   name: 'clyde',
+    //   x: Math.floor(Math.random() * this.grid_w),
+    //   y: Math.floor(Math.random() * this.grid_h),
+    //   color: COLORS[4],
+    //   dir: Math.floor(Math.random() * 4)
+    // };
     
     // Array of all players in the room.
     this.players = [
       this.player1,
       this.player2,
-      this.player3,
-      this.player4
+      this.player3
+      // this.player4
     ];
     
     // Draw obstacle in the center.
@@ -106,7 +113,7 @@ class GameRoom {
     this.verifyPosition(this.player1);
     this.verifyPosition(this.player2);
     this.verifyPosition(this.player3);
-    this.verifyPosition(this.player4);
+    // this.verifyPosition(this.player4);
     
     this.startTimer();
     this.game_over = false;
@@ -119,7 +126,7 @@ class GameRoom {
       this.player1.dir = Math.floor(Math.random() * 4);
       this.player2.dir = Math.floor(Math.random() * 4);
       this.player3.dir = Math.floor(Math.random() * 4);
-      this.player4.dir = Math.floor(Math.random() * 4);
+      // this.player4.dir = Math.floor(Math.random() * 4);
       
       // Update each of the player positions based on direction.
       this.players.forEach(function(player) {
@@ -182,8 +189,10 @@ class GameRoom {
   
   // Adds a player to the GameRoom.
   addPlayer(player) {
-    this.verifyPosition(player);
-    this.players.push(player);
+    if(this.size < MAX_PLAYERS) {
+      this.verifyPosition(player);
+      this.players.push(player);
+    }
   }
   
   // Removes a player from the GameRoom (if he exists).
@@ -231,11 +240,12 @@ class GameRoom {
   gameOver() {
     this.stopTimer();
     this.game_over = true;
+    console.log(this.name + ": Game Over.");
   }
   
   // Number of players in the room.
   get size() {
-    return this.players.length - 4; // Number of players that are not "ai".
+    return this.players.length;
   }
   
   // State of the room.
@@ -289,7 +299,7 @@ io.sockets.on('connection', function(client) {
     console.log('Creating room. Name: ' + room_code);
     
     if(createRoom(room_code)) {
-      ifJoinRoom(room_code);
+      ifJoinRoom(room_code, player_name);
     } else {
       client.emit('could_not_create_room');
     }
@@ -303,10 +313,10 @@ io.sockets.on('connection', function(client) {
   });
   
   // Join a room if possible.
-  function ifJoinRoom(room_name) {
+  function ifJoinRoom(room_name, player_name) {
     if(canJoinRoom(room_name)) {
       room = room_name;
-      player = createPlayer(client.id);
+      player = createPlayer(client.id, player_name);
       client.join(room);
       // Add player to room
       joinRoom(room, player);
@@ -321,13 +331,15 @@ io.sockets.on('connection', function(client) {
 });
 
 // Create a player object with a given id.
-function createPlayer(id) {
+function createPlayer(id, player_name) {
   var player = {
     id: id,
+    name: player_name,
     x: Math.floor(Math.random() * GRID_WIDTH),
     y: Math.floor(Math.random() * GRID_HEIGHT),
-    color: COLORS[Math.floor((Math.random() * (COLORS.length - 1)) + 1)],
-    dir: Math.floor(Math.random() * 4)
+    color: COLORS[4],
+    dir: Math.floor(Math.random() * 4),
+    score: 456
   };
   return player;
 }

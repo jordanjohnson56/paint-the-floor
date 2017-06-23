@@ -82,6 +82,7 @@ $(function() {
     has_joined = true;
     
     my_id = player.id;
+    console.log(my_id);
 
     // Create the canvas
     createCanvas();
@@ -102,6 +103,7 @@ $(function() {
   // rendering the game.
   socket.on('snapshot_start', function(state) {
     getStateInfo(state);
+    console.log(state);
     can_render = true;
   });
   
@@ -160,10 +162,14 @@ $(function() {
       drawGrid();
       // Fill grid with game state info.
       fillGrid();
+      // Draw transparent background for info.
+      drawInfoBackground();
       // Draw minimap.
       drawMap();
       // Draw game timer.
       drawTimer();
+      // Draw player scores.
+      drawScores();
     }
     window.requestAnimationFrame(draw);
   }
@@ -268,6 +274,12 @@ $(function() {
     }
   }
   
+  // Draw a semi-transparent background to help read the scores and timer.
+  function drawInfoBackground() {
+    c.fillStyle = 'rgba(50,50,50,0.3)';
+    c.fillRect(0,0,canvas.width, 124);
+  }
+  
   // Draw the game timer.
   function drawTimer() {
     if(game_time !== undefined && !isNaN(game_time)) {
@@ -276,13 +288,39 @@ $(function() {
       if(sec < 10) sec = '0' + sec;
       var timer_text = min + ':' + sec;
       var x = canvas.width / 2;
-      var y = 58;
+      var y = 70;
       
       c.font = '60px Anonymous Pro';
       c.textAlign = 'center';
       c.fillStyle = 'black';
       
       c.fillText(timer_text, x, y);
+    }
+  }
+  
+  function drawScores() {
+    if(players !== undefined) {
+      for(var i = 0; i < players.length; i++) {
+        var player = players[i];
+        var name = player.name;
+        var score = player.score;
+        
+        var gap_w = canvas.width / 8;
+        var x;
+        if(i < 2) x = (canvas.width / 2) - (gap_w * (2 - i));
+        else      x = (canvas.width / 2) + (gap_w * (i - 1));
+        var name_y = 40;
+        var score_y = 97;
+        
+        c.font = '40px Anonymous Pro';
+        c.textAlign = 'center';
+        c.fillStyle = player.color;
+        
+        c.fillText(name, x, name_y);
+        
+        c.font = '54px Anonymous Pro';
+        c.fillText(score, x, score_y)
+      }
     }
   }
   
