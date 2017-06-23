@@ -13,6 +13,7 @@ $(function() {
   var players = [];       // Current player stats.
   var can_render = false; // Has client received first snapshot?
   var my_id, my_player;   // Client's player id and associated object.
+  var game_time;          // Current time left in the game.
 
   // Resize the canvas when the window is resized.
   window.addEventListener('resize', resize);
@@ -92,7 +93,9 @@ $(function() {
   // Includes grid state, player states (positions), as well as some metrics to
   // help prevent cheating.
   socket.on('snapshot', function(state) {
+    var old_time = game_time;
     getStateInfo(state);
+    if(game_time != old_time) console.log(game_time);
   });
   
   // Initial game state from server which tells the client that it can start
@@ -116,6 +119,8 @@ $(function() {
     players.forEach(function(player) {
       if(player.id == my_id) my_player = player;
     });
+    
+    game_time = state.game_time;
   }
   
   // Watch for arrow key presses and send this information to the server so that
@@ -157,6 +162,8 @@ $(function() {
       fillGrid();
       // Draw minimap.
       drawMap();
+      // Draw game timer.
+      drawTimer();
     }
     window.requestAnimationFrame(draw);
   }
@@ -258,6 +265,24 @@ $(function() {
         var y = map_y + map_border + player.y * gap_h;
         c.strokeRect(x, y, gap_w, gap_h);
       });
+    }
+  }
+  
+  // Draw the game timer.
+  function drawTimer() {
+    if(game_time !== undefined && !isNaN(game_time)) {
+      var min = Math.floor(game_time / 60);
+      var sec = game_time % 60;
+      if(sec < 10) sec = '0' + sec;
+      var timer_text = min + ':' + sec;
+      var x = canvas.width / 2;
+      var y = 58;
+      
+      c.font = '60px Anonymous Pro';
+      c.textAlign = 'center';
+      c.fillStyle = 'black';
+      
+      c.fillText(timer_text, x, y);
     }
   }
   

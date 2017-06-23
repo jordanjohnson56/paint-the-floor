@@ -107,24 +107,29 @@ class GameRoom {
     this.verifyPosition(this.player2);
     this.verifyPosition(this.player3);
     this.verifyPosition(this.player4);
+    
+    this.startTimer();
+    this.game_over = false;
   }
   
   // Main game loop for this room. Gets put into a setInterval function.
   updateGame() {
-    // Give AI random move directions.
-    this.player1.dir = Math.floor(Math.random() * 4);
-    this.player2.dir = Math.floor(Math.random() * 4);
-    this.player3.dir = Math.floor(Math.random() * 4);
-    this.player4.dir = Math.floor(Math.random() * 4);
-    
-    // Update each of the player positions based on direction.
-    this.players.forEach(function(player) {
-      this.updatePosition(player);
-      this.grid_state[player.x][player.y] = player.color;
-    }, this);
-    
-    // Tell each of the clients in the room.
-    io.to(this.name).emit('snapshot', this.roomState);
+    if(!this.game_over) {
+      // Give AI random move directions.
+      this.player1.dir = Math.floor(Math.random() * 4);
+      this.player2.dir = Math.floor(Math.random() * 4);
+      this.player3.dir = Math.floor(Math.random() * 4);
+      this.player4.dir = Math.floor(Math.random() * 4);
+      
+      // Update each of the player positions based on direction.
+      this.players.forEach(function(player) {
+        this.updatePosition(player);
+        this.grid_state[player.x][player.y] = player.color;
+      }, this);
+      
+      // Tell each of the clients in the room.
+      io.to(this.name).emit('snapshot', this.roomState);
+    }
   }
   
   // Updates player's position based on direction, but will ensure player does
@@ -200,6 +205,34 @@ class GameRoom {
     }
   }
   
+  // Start game timer.
+  startTimer() {
+    this.game_time = 180;
+    this.game_timer = setInterval(this.updateTimer.bind(this), 1000);
+  }
+  
+  // Update game timer.
+  updateTimer() {
+    if(this.game_time !== undefined) {
+      this.game_time -= 1;
+      if(this.game_time <= 0) {
+        this.gameOver();
+      }
+    }
+  }
+  
+  // Stop and clear timer.
+  stopTimer() {
+    clearInterval(this.game_timer);
+    this.game_time = 0;
+  }
+  
+  // End the game.
+  gameOver() {
+    this.stopTimer();
+    this.game_over = true;
+  }
+  
   // Number of players in the room.
   get size() {
     return this.players.length - 4; // Number of players that are not "ai".
@@ -214,6 +247,7 @@ class GameRoom {
     state.grid_h = GRID_HEIGHT;
     state.view_w = VIEW_WIDTH;
     state.view_h = VIEW_HEIGHT;
+    state.game_time = this.game_time;
     return state;
   }
 }
