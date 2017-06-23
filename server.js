@@ -23,11 +23,12 @@ app.get('*', function(req, res) {
 // Note: need to add gray as a color, but this requires some changes to other
 // bits of code.
 const COLORS = [
-  '#FFFFFF', // white
-  '#ED1C24', // red
-  '#333399', // blue
-  '#00A550', // green
-  '#FFEF00'  // yellow
+  '#FFFFFF',  // white
+  '#ED1C24',  // red
+  '#333399',  // blue
+  '#00A550',  // green
+  '#FFEF00',  // yellow
+  '#686868'   // gray
 ];
 const GRID_WIDTH = 75;  // Number of horizontal grid tiles.
 const GRID_HEIGHT = 40; // Number of vertical grid tiles.
@@ -56,7 +57,7 @@ class GameRoom {
     }
     
     // AI
-    // Note: will be removed once lobbies are set up.
+    // Note: will be changed once lobbies are set up.
     this.player1 = {
       id: '1',
       name: 'blinky',
@@ -64,7 +65,7 @@ class GameRoom {
       y: Math.floor(Math.random() * this.grid_h),
       color: COLORS[1],
       dir: Math.floor(Math.random() * 4),
-      score: 123
+      score: 0
     };
     
     this.player2 = {
@@ -74,7 +75,7 @@ class GameRoom {
       y: Math.floor(Math.random() * this.grid_h),
       color: COLORS[2],
       dir: Math.floor(Math.random() * 4),
-      score: 234
+      score: 0
     };
     
     this.player3 = {
@@ -84,7 +85,7 @@ class GameRoom {
       y: Math.floor(Math.random() * this.grid_h),
       color: COLORS[3],
       dir: Math.floor(Math.random() * 4),
-      score: 345
+      score: 0
     };
     
     // this.player4 = {
@@ -131,7 +132,8 @@ class GameRoom {
       // Update each of the player positions based on direction.
       this.players.forEach(function(player) {
         this.updatePosition(player);
-        this.grid_state[player.x][player.y] = player.color;
+        this.updateScore(player);
+        // this.grid_state[player.x][player.y] = player.color;
       }, this);
       
       // Tell each of the clients in the room.
@@ -178,11 +180,19 @@ class GameRoom {
     return this.grid_state[x][y];
   }
   
+  // Update grid tile and if it changes, add to player's score.
+  updateScore(player) {
+    if(this.grid_state[player.x][player.y] != player.color) {
+      this.grid_state[player.x][player.y] = player.color;
+      player.score += 1;
+    }
+  }
+  
   // Draws a rectangular obstacle on the board.
   drawRectObstacle(x, y, w, h) {
     for(var i = x; i < x + w; i++) {
       for(var j = y; j < y + h; j++) {
-        this.grid_state[i][j] = '#686868';
+        this.grid_state[i][j] = COLORS[5];
       }
     }
   }
@@ -216,7 +226,7 @@ class GameRoom {
   
   // Start game timer.
   startTimer() {
-    this.game_time = 180;
+    this.game_time = 20;
     this.game_timer = setInterval(this.updateTimer.bind(this), 1000);
   }
   
@@ -238,9 +248,10 @@ class GameRoom {
   
   // End the game.
   gameOver() {
-    this.stopTimer();
     this.game_over = true;
+    this.stopTimer();
     console.log(this.name + ": Game Over.");
+    io.to(this.name).emit('game_over', this.roomState);
   }
   
   // Number of players in the room.
@@ -339,7 +350,7 @@ function createPlayer(id, player_name) {
     y: Math.floor(Math.random() * GRID_HEIGHT),
     color: COLORS[4],
     dir: Math.floor(Math.random() * 4),
-    score: 456
+    score: 0
   };
   return player;
 }

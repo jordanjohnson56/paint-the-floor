@@ -12,6 +12,7 @@ $(function() {
   var grid = [];          // Current state of the game board.
   var players = [];       // Current player stats.
   var can_render = false; // Has client received first snapshot?
+  var game_over = false;  // Has the game ended?
   var my_id, my_player;   // Client's player id and associated object.
   var game_time;          // Current time left in the game.
 
@@ -25,17 +26,21 @@ $(function() {
     var room_input = $('#room-code').val();
     if(!has_joined) {
       if(name_input != '') {
-        if(room_input != '') {
-          // Tell the server
-          socket.emit('join_room', {
-            player_name: name_input,
-            room_code: room_input
-          });
+        if(name_input.length <= 12) {
+          if(room_input != '') {
+            // Tell the server
+            socket.emit('join_room', {
+              player_name: name_input,
+              room_code: room_input
+            });
+          } else {
+            showError('Please enter a room code.');
+          }
         } else {
-          console.error('Please enter a room code.');
+          showError('Please use a shorter name.');
         }
       } else {
-        console.error('Please enter a name.');
+        showError('Please enter a name.');
       }
     }
     return false;
@@ -48,14 +53,18 @@ $(function() {
     var room_input = $('#room-code').val();
     if(!has_joined) {
       if(name_input != '') {
-        if(room_input != '') {
-          // Tell the server
-          socket.emit('create_room', {
-            player_name: name_input,
-            room_code: room_input
-          });
+        if(name_input.length <= 12) {
+          if(room_input != '') {
+            // Tell the server
+            socket.emit('create_room', {
+              player_name: name_input,
+              room_code: room_input
+            });
+          } else {
+            showError('Please enter a room code.');
+          }
         } else {
-          showError('Please enter a room code.');
+          showError('Please use a shorter name.');
         }
       } else {
         showError('Please enter a name.');
@@ -76,13 +85,11 @@ $(function() {
   
   // Notification that a room was successfully joined.
   socket.on('joined_room', function(player) {
-    console.log('hello room');
     // Remove the join screen
     $('#join').remove();
     has_joined = true;
     
     my_id = player.id;
-    console.log(my_id);
 
     // Create the canvas
     createCanvas();
@@ -94,17 +101,21 @@ $(function() {
   // Includes grid state, player states (positions), as well as some metrics to
   // help prevent cheating.
   socket.on('snapshot', function(state) {
-    var old_time = game_time;
     getStateInfo(state);
-    if(game_time != old_time) console.log(game_time);
+    game_over = false;
   });
   
   // Initial game state from server which tells the client that it can start
   // rendering the game.
   socket.on('snapshot_start', function(state) {
     getStateInfo(state);
-    console.log(state);
     can_render = true;
+  });
+  
+  // Final game state when game ends.
+  socket.on('game_over', function(state) {
+    getStateInfo(state);
+    game_over = true;
   });
   
   // Updates client's game state information based on server state.
@@ -128,19 +139,21 @@ $(function() {
   // Watch for arrow key presses and send this information to the server so that
   // it can move the player in the correct direction.
   document.addEventListener("keydown", function(event){
-    switch(event.code){
-      case 'ArrowLeft': 
-        socket.emit('direction', 3); // LEFT
-        break;
-      case 'ArrowUp': 
-        socket.emit('direction', 0); // UP
-        break;
-      case 'ArrowRight': 
-        socket.emit('direction', 1); // RIGHT
-        break;
-      case 'ArrowDown': 
-        socket.emit('direction', 2); // DOWN
-        break;
+    if(!game_over) {
+      switch(event.code) {
+        case 'ArrowLeft': 
+          socket.emit('direction', 3); // LEFT
+          break;
+        case 'ArrowUp': 
+          socket.emit('direction', 0); // UP
+          break;
+        case 'ArrowRight': 
+          socket.emit('direction', 1); // RIGHT
+          break;
+        case 'ArrowDown': 
+          socket.emit('direction', 2); // DOWN
+          break;
+      }
     }
   });
   
@@ -155,7 +168,7 @@ $(function() {
   
   // Main game rendering loop. This is the client's primary job.
   function draw() {
-    if(c !== undefined) {
+    if(c !== undefined && can_render) {
       // Clear canvas
       c.clearRect(0, 0, canvas.width, canvas.height);
       // Draw gridlines.
@@ -170,6 +183,10 @@ $(function() {
       drawTimer();
       // Draw player scores.
       drawScores();
+      if(game_over) {
+        // Draw game over screen.
+        drawGameOver();
+      }
     }
     window.requestAnimationFrame(draw);
   }
@@ -195,7 +212,7 @@ $(function() {
     gap = c_height / view_h;
     
     // Draw horizontal lines
-    for(var i = 0; i < c_height; i += gap) {
+    for(i = 0; i < c_height; i += gap) {
       c.beginPath();
       c.moveTo(0, i);
       c.lineTo(c_width, i);
@@ -277,6 +294,8 @@ $(function() {
   // Draw a semi-transparent background to help read the scores and timer.
   function drawInfoBackground() {
     c.fillStyle = 'rgba(50,50,50,0.3)';
+    c.strokeStyle = '#333';
+    c.lineWidth = 1;
     c.fillRect(0,0,canvas.width, 124);
   }
   
@@ -298,6 +317,7 @@ $(function() {
     }
   }
   
+  // Draw player scores.
   function drawScores() {
     if(players !== undefined) {
       for(var i = 0; i < players.length; i++) {
@@ -305,7 +325,7 @@ $(function() {
         var name = player.name;
         var score = player.score;
         
-        var gap_w = canvas.width / 8;
+        var gap_w = canvas.width / 6;
         var x;
         if(i < 2) x = (canvas.width / 2) - (gap_w * (2 - i));
         else      x = (canvas.width / 2) + (gap_w * (i - 1));
@@ -315,13 +335,78 @@ $(function() {
         c.font = '40px Anonymous Pro';
         c.textAlign = 'center';
         c.fillStyle = player.color;
+        c.strokeStyle = 'black';
+        c.lineWidth = 1;
         
         c.fillText(name, x, name_y);
         
         c.font = '54px Anonymous Pro';
-        c.fillText(score, x, score_y)
+        c.fillText(score, x, score_y);
       }
     }
+  }
+  
+  // Draw game over screen with winner's name and score.
+  function drawGameOver() {
+    // Draw the background.
+    // c.fillStyle = 'rgba(50,50,50,0.3)';
+    c.fillStyle = '#aaa';
+    c.strokeStyle = '#555';
+    c.lineWidth = 1;
+    
+    var rect_w = canvas.width / 3;
+    var rect_h = canvas.height / 3;
+    var rect_x = canvas.width / 2 - rect_w / 2;
+    var rect_y = canvas.height / 2 - rect_h / 2;
+    
+    c.fillRect(rect_x, rect_y, rect_w, rect_h);
+    
+    // Find the winner.
+    var winner = players.reduce(function(max, player) {
+      console.log('player ' + player.name + ' score: ' + player.score);
+      console.log(max);
+      console.log('old max score: ' + max.score);
+      if(player.score > max.score) {
+        return player;
+      }
+      console.log('max score: ' + max.score);
+      return max;
+    }, {score: -1});
+    
+    // Draw the winner's name and score.
+    c.strokeStyle = 'black';
+    c.textAlign = 'center';
+    
+    var x = canvas.width / 2;
+    var winner_y = canvas.height / 2 - 100;
+    var winner_underline_y = canvas.height / 2 - 88;
+    var name_y = canvas.height / 2;
+    var score_y = canvas.height / 2 + 108;
+    
+    c.font = '72px Anonymous Pro';
+    c.fillStyle = 'black';
+    c.lineWidth = 1;
+    
+    c.fillText('Winner', x, winner_y);
+    // c.strokeText('Winner', x, winner_y);
+    
+    var line_length = c.measureText('Winner').width;
+    c.lineWidth = 2;
+    c.lineStyle = 'square';
+    
+    c.beginPath();
+    c.moveTo(x - line_length / 2 - 4, winner_underline_y);
+    c.lineTo(x + line_length / 2 - 4, winner_underline_y);
+    c.stroke();
+
+    c.font = '108px Anonymous Pro';
+    c.fillStyle = winner.color;
+    c.lineWidth = 1;
+
+    c.fillText(winner.name, x, name_y);
+    // c.strokeText(winner.name, x, name_y);
+    c.fillText(winner.score, x, score_y);
+    // c.strokeText(winner.score, x, score_y);
   }
   
   // Resize the game canvas to fill the window.
