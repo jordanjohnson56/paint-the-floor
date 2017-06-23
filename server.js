@@ -38,7 +38,7 @@ const VIEW_WIDTH = 30;  // Number of horizontal grid tiles shown to player.
 const VIEW_HEIGHT = 16; // Number of vertical grid tiles shown to player.
 
 var rooms = {};         // List of currently created rooms.
-var intervals = {};     // Parallel array for intervals created to update the rooms.
+var intervals = {};     // Array of intervals created to update the rooms.
 
 class GameRoom {
   // Sets room name, grid width and height, sets all grid tiles to white,

@@ -233,7 +233,8 @@ $(function() {
     
     if(can_render) {
       view_x = clamp(my_player.x - Math.floor(view_w / 2), 0, grid_w - view_w);
-      view_y = clamp(my_player.y - Math.floor(view_h / 2) + 1, 0, grid_h - view_h);
+      view_y = clamp(my_player.y - Math.floor(view_h / 2) + 1, 0, 
+                     grid_h - view_h);
       for(var i = 0; i < view_w; i++) {
         for(var j = 0; j < view_h; j++) {
           c.fillStyle = grid[i + view_x][j + view_y];
@@ -259,11 +260,11 @@ $(function() {
   // Draw the minimap in the top-left corner with the full game state
   // information.
   function drawMap() {
-    var map_x = 5;
-    var map_y = 5;
     var map_border = 2;
     var map_w = Math.floor(canvas.width / 7);
     var map_h = Math.floor(canvas.height / 7);
+    var map_x = 5;
+    var map_y = canvas.height - map_h - 5;
     
     var gap_w = (map_w - map_border * 2) / grid_w;
     var gap_h = (map_h - map_border * 2) / grid_h;
@@ -271,13 +272,19 @@ $(function() {
     if(can_render) {
       c.fillStyle = '#000';
       c.fillRect(map_x, map_y, map_w, map_h);
+      c.fillStyle = '#fff';
+      c.fillRect(map_x + map_border, map_y + map_border, map_w - map_border * 2,
+                 map_h - map_border * 2);
       
       for(var i = 0; i < grid_w; i++) {
         for(var j = 0; j < grid_h; j++) {
-          c.fillStyle = grid[i][j];
-          var x = map_x + map_border + i * gap_w;
-          var y = map_y + map_border + j * gap_h;
-          c.fillRect(x, y, gap_w, gap_h);
+          var color = grid[i][j];
+          if(color != '#FFFFFF') {
+            c.fillStyle = color;
+            var x = map_x + map_border + i * gap_w;
+            var y = map_y + map_border + j * gap_h;
+            c.fillRect(x, y, gap_w, gap_h);
+          }
         }
       }
       
@@ -349,10 +356,7 @@ $(function() {
   // Draw game over screen with winner's name and score.
   function drawGameOver() {
     // Draw the background.
-    // c.fillStyle = 'rgba(50,50,50,0.3)';
     c.fillStyle = '#aaa';
-    c.strokeStyle = '#555';
-    c.lineWidth = 1;
     
     var rect_w = canvas.width / 3;
     var rect_h = canvas.height / 3;
@@ -363,18 +367,13 @@ $(function() {
     
     // Find the winner.
     var winner = players.reduce(function(max, player) {
-      console.log('player ' + player.name + ' score: ' + player.score);
-      console.log(max);
-      console.log('old max score: ' + max.score);
       if(player.score > max.score) {
         return player;
       }
-      console.log('max score: ' + max.score);
       return max;
     }, {score: -1});
     
     // Draw the winner's name and score.
-    c.strokeStyle = 'black';
     c.textAlign = 'center';
     
     var x = canvas.width / 2;
@@ -385,15 +384,16 @@ $(function() {
     
     c.font = '72px Anonymous Pro';
     c.fillStyle = 'black';
-    c.lineWidth = 1;
     
+    // Winner label.
     c.fillText('Winner', x, winner_y);
-    // c.strokeText('Winner', x, winner_y);
     
     var line_length = c.measureText('Winner').width;
+    c.strokeStyle = 'black';
     c.lineWidth = 2;
     c.lineStyle = 'square';
     
+    // Winner underline.
     c.beginPath();
     c.moveTo(x - line_length / 2 - 4, winner_underline_y);
     c.lineTo(x + line_length / 2 - 4, winner_underline_y);
@@ -401,12 +401,11 @@ $(function() {
 
     c.font = '108px Anonymous Pro';
     c.fillStyle = winner.color;
-    c.lineWidth = 1;
-
+    
+    // Winner name.
     c.fillText(winner.name, x, name_y);
-    // c.strokeText(winner.name, x, name_y);
+    // Winner score.
     c.fillText(winner.score, x, score_y);
-    // c.strokeText(winner.score, x, score_y);
   }
   
   // Resize the game canvas to fill the window.
