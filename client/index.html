@@ -10,7 +10,8 @@
 
   <link rel="stylesheet" 
         href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" 
-        integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+        integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+        crossorigin="anonymous">
   <link rel="stylesheet" href="/css/style.css">
 
   <!--[if lt IE 9]>
@@ -19,32 +20,51 @@
 </head>
 
 <body>
-  <div class="container" id="join">
-    <h1 class="text-center">Paint the Floor</h1>
-    <form id="join-room">
-      <div class="form-group row">
-        <div class="col-sm-12">
-          <input type="text" class="form-control text-center" id="player-name" 
-                 placeholder="Player Name">
+  <canvas id="game_canvas"></canvas>
+  <div class="container">
+    <div class="menu" id="join">
+      <div class="info-box">
+        <h1 class="text-center display-1">Paint the Floor</h1>
+        <form id="join-room">
+          <div class="form-group row">
+            <div class="col-sm-12">
+              <input type="text" class="form-control text-center" id="player-name" 
+                     placeholder="Player Name">
+            </div>
+          </div>
+          <div class="form-group row">
+            <div class="col-sm-8">
+              <input type="text" class="form-control text-center" id="room-code" 
+                     placeholder="Room Code">
+            </div>
+            <div class="col-sm-4">
+              <button type="submit" class="btn btn-primary btn-block">Play</button>
+            </div>
+          </div>
+        </form>
+        <div class="row">
+          <div class="col-sm-6">
+            <button class="btn btn-primary btn-block">How to Play</button>
+          </div>
+          <div class="col-sm-6">
+            <form id="create-room">
+              <button type="submit" class="btn btn-primary btn-block">Create Room</button>
+            </form>
+          </div>
         </div>
       </div>
-      <div class="form-group row">
-        <div class="col-sm-8">
-          <input type="text" class="form-control text-center" id="room-code" 
-                 placeholder="Room Code">
-        </div>
-        <div class="col-sm-4">
-          <button type="submit" class="btn btn-primary btn-block">Play</button>
-        </div>
-      </div>
-    </form>
-    <div class="row">
-      <div class="col-sm-6">
-        <button class="btn btn-primary btn-block">How to Play</button>
-      </div>
-      <div class="col-sm-6">
-        <form id="create-room">
-          <button type="submit" class="btn btn-primary btn-block">Create Room</button>
+    </div>
+    <div class="menu" id="room">
+      <div class="info-box">
+        <h1 class="text-center display-2" id="room-name">Room: lol</h1>
+        <ol>
+          <li id="player-one">Player One <i class="fa fa-h-square"></i></li>
+          <li id="player-two">Player Two</li>
+          <li id="player-three">Player Three</li>
+          <li id="player-four">Player Four</li>
+        </ol>
+        <form id="ready">
+          <button type="submit" class="btn btn-danger" state="not-ready"><i class="fa fa-times"></i> Ready</button>
         </form>
       </div>
     </div>
@@ -53,6 +73,7 @@
   <script src="https://code.jquery.com/jquery-3.2.1.min.js"
           integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
           crossorigin="anonymous"></script>
+  <script src="https://use.fontawesome.com/227b58ae21.js"></script>
   <script src="/js/main.js"></script>
 </body>
 </html>

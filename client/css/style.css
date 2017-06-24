@@ -7,8 +7,69 @@ html, body {
 
 canvas {
     display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
-h1, input, button {
+h1, input, button, li {
     font-family: 'Anonymous Pro', monospace;
+}
+
+.container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    text-align: center;
+    z-index: 30;
+}
+
+.menu {
+    display: flex;
+    height: 90%;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.info-box {
+    padding: 20px;
+    background: rgba(50, 50, 50, 0.3);
+    border: 1px solid rgb(100, 100, 100);
+}
+
+#join {
+    display: none;
+}
+
+#room {
+    /*display: none;*/
+}
+
+.info-box li {
+    font-size: 36px;
+    text-align: left;
+    margin-left: 40%;
+}
+
+#player-one {
+    color: #ED1C24;
+}
+
+#player-two {
+    color: #333399;
+}
+
+#player-three {
+    color: #00A550;
+}
+
+#player-four {
+    color: #FFEF00;
+}
+
+#ready button {
+    width: 35%;
 }

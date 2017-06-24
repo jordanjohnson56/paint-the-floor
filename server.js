@@ -48,6 +48,7 @@ class GameRoom {
     this.grid_w = GRID_WIDTH;
     this.grid_h = GRID_HEIGHT;
     this.grid_state = [];
+    this.game_interval;
   
     for(var i = 0; i < this.grid_w; i++) {
       this.grid_state[i] = [];
@@ -118,6 +119,11 @@ class GameRoom {
     
     this.startTimer();
     this.game_over = false;
+  }
+  
+  // Start the game loop.
+  startGame() {
+    this.game_interval = setInterval(this.updateGame.bind(this), GAME_TICK);
   }
   
   // Main game loop for this room. Gets put into a setInterval function.
@@ -197,6 +203,19 @@ class GameRoom {
     }
   }
   
+  createPlayer(id, player_name) {
+    var player = {
+      id: id,
+      name: player_name,
+      x: Math.floor(Math.random() * GRID_WIDTH),
+      y: Math.floor(Math.random() * GRID_HEIGHT),
+      color: COLORS[4],
+      dir: Math.floor(Math.random() * 4),
+      score: 0
+    };
+    return player;
+  }
+  
   // Adds a player to the GameRoom.
   addPlayer(player) {
     if(this.size < MAX_PLAYERS) {
@@ -252,6 +271,10 @@ class GameRoom {
     this.stopTimer();
     console.log(this.name + ": Game Over.");
     io.to(this.name).emit('game_over', this.roomState);
+  }
+  
+  destroyRoom() {
+    clearInterval(this.game_interval);
   }
   
   // Number of players in the room.
@@ -342,17 +365,10 @@ io.sockets.on('connection', function(client) {
 });
 
 // Create a player object with a given id.
-function createPlayer(id, player_name) {
-  var player = {
-    id: id,
-    name: player_name,
-    x: Math.floor(Math.random() * GRID_WIDTH),
-    y: Math.floor(Math.random() * GRID_HEIGHT),
-    color: COLORS[4],
-    dir: Math.floor(Math.random() * 4),
-    score: 0
-  };
-  return player;
+function createPlayer(room_name, id, player_name) {
+  if(room_name in rooms) {
+    return rooms[room_name].createPlayer(id, player_name);
+  }
 }
 
 // Checks if the room exists and has an open spot.
@@ -364,9 +380,6 @@ function canJoinRoom(room_name) {
 function createRoom(room_name) {
   if(!(room_name in rooms)) {
     rooms[room_name] = new GameRoom(room_name);
-    intervals[room_name] = 
-      setInterval(rooms[room_name].updateGame.bind(rooms[room_name]), 
-                  GAME_TICK);
     return true;
   }
   return false;
@@ -375,9 +388,8 @@ function createRoom(room_name) {
 // Destroy a room.
 function destroyRoom(room_name) {
   if(room_name in rooms) {
+    rooms[room_name].destroyRoom();
     delete rooms[room_name];
-    clearInterval(intervals[room_name]);
-    delete intervals[room_name];
   }
 }
 

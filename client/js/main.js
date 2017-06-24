@@ -15,9 +15,12 @@ $(function() {
   var game_over = false;  // Has the game ended?
   var my_id, my_player;   // Client's player id and associated object.
   var game_time;          // Current time left in the game.
+  var splash = true;      // Show the splash screen canvas?
 
   // Resize the canvas when the window is resized.
+  createCanvas();
   window.addEventListener('resize', resize);
+  window.requestAnimationFrame(drawSplash);
   
   // Join room when player submits, if valid info is given.
   $('#join-room').submit(function(e) {
@@ -97,6 +100,30 @@ $(function() {
     window.requestAnimationFrame(draw);
   });
   
+  // Ready button in the lobby.
+  $('#ready').submit(function(e) {
+    e.preventDefault();
+    var button = $('#ready button')[0];
+    var player2 = $('#player-two');
+    var player3 = $('#player-three');
+    var player4 = $('#player-four');
+    if($(button).attr("state") == "not-ready") {
+      $(button).attr("state", "is-ready");
+      $(button).removeClass().addClass("btn btn-success");
+      $(button).html('<i class="fa fa-check"></i> Ready');
+      player2.html('Player Two <i class="fa fa-check"></i>');
+      player3.html('Player Three <i class="fa fa-check"></i>');
+      player4.html('Player Four <i class="fa fa-check"></i>');
+    } else {
+      $(button).attr("state", "not-ready");
+      $(button).removeClass().addClass("btn btn-danger");
+      $(button).html('<i class="fa fa-times"></i> Ready');
+      player2.html('Player Two');
+      player3.html('Player Three');
+      player4.html('Player Four');
+    }
+  });
+  
   // Latest game state from the server.
   // Includes grid state, player states (positions), as well as some metrics to
   // help prevent cheating.
@@ -159,7 +186,7 @@ $(function() {
   
   // Create the game canvas.
   function createCanvas() {
-    $('body').append('<canvas id="game_canvas"></canvas>');
+    // $('body').append('<canvas id="game_canvas"></canvas>');
     canvas = $('#game_canvas')[0];
     c = canvas.getContext('2d');
     // Set default width to window
@@ -406,6 +433,54 @@ $(function() {
     c.fillText(winner.name, x, name_y);
     // Winner score.
     c.fillText(winner.score, x, score_y);
+  }
+  
+  function drawSplash() {
+    if(c !== undefined && splash) {
+      // Clear canvas.
+      c.clearRect(0, 0, canvas.width, canvas.height);
+      // Draw gridlines.
+      drawGrid();
+      // Fill grid with splash screen.
+      fillGridSplash();
+    }
+    window.requestAnimationFrame(drawSplash);
+  }
+  
+  function fillGridSplash() {
+    var c_width = canvas.width;
+    var c_height = canvas.height;
+    
+    var gap_w = c_width / view_w;
+    var gap_h = c_height / view_h;
+    
+    var view_x;
+    var view_y;
+    
+    if(can_render) {
+      view_x = clamp(my_player.x - Math.floor(view_w / 2), 0, grid_w - view_w);
+      view_y = clamp(my_player.y - Math.floor(view_h / 2) + 1, 0, 
+                     grid_h - view_h);
+      for(var i = 0; i < view_w; i++) {
+        for(var j = 0; j < view_h; j++) {
+          c.fillStyle = grid[i + view_x][j + view_y];
+          var x = i * gap_w + 1;
+          var y = j * gap_h + 1;
+          c.fillRect(x, y, gap_w - 2, gap_h - 2);
+        }
+      }
+      
+      c.strokeStyle = '#000';
+      c.lineWidth = 8;
+      // players.forEach(function(player) {
+      //   var rel_x = player.x - view_x;
+      //   var rel_y = player.y - view_y;
+      //   var x = rel_x * gap_w + Math.ceil(c.lineWidth / 2) + 1;
+      //   var y = rel_y * gap_h + Math.ceil(c.lineWidth / 2) + 1;
+      //   c.strokeRect(x, y, gap_w - 2 * (Math.ceil(c.lineWidth / 2) + 1),
+      //                     gap_h - 2 * (Math.ceil(c.lineWidth / 2) + 1));
+      // });
+    }
   }
   
   // Resize the game canvas to fill the window.
