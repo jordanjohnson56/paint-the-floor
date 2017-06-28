@@ -40,6 +40,7 @@ const GRID_WIDTH = 75;  // Number of horizontal grid tiles.
 const GRID_HEIGHT = 40; // Number of vertical grid tiles.
 const MAX_PLAYERS = 4;  // Number of players allowed in room.
 const GAME_TICK = 100;  // Milliseconds between server ticks.
+const GAME_TIME = 180;  // Length of a game in seconds.
 const VIEW_WIDTH = 30;  // Number of horizontal grid tiles shown to player.
 const VIEW_HEIGHT = 16; // Number of vertical grid tiles shown to player.
 
@@ -127,10 +128,19 @@ class GameRoom {
   
   // Start the game loop and game timer.
   startGame() {
-    console.log("starting game: " + this.name);
-    this.game_interval = setInterval(this.updateGame.bind(this), GAME_TICK);
-    this.startTimer();
-    io.to(this.name).emit('snapshot_start', this.roomState);
+    var all_ready = true;
+    this.players.forEach(function(player, index) {
+      if(index != 0 && !player.ready) all_ready = false;
+    });
+    if(all_ready) {
+      console.log("starting game: " + this.name);
+      this.game_interval = setInterval(this.updateGame.bind(this), GAME_TICK);
+      this.startTimer();
+      this.lobby = false;
+      io.to(this.name).emit('snapshot_start', this.roomState);
+    } else {
+      io.to(this.name).emit('players_not_ready');
+    }
   }
   
   // Main game loop for this room. Gets put into a setInterval function.
@@ -213,6 +223,11 @@ class GameRoom {
   // Update room state.
   update() {
     if(this.lobby) {
+      this.players.forEach(function(player, index) {
+        player.host = false;
+        player.color = COLORS[index + 1];
+      });
+      this.players[0].host = true;
       io.to(this.name).emit('lobby_update', this.players);
     }
   }
@@ -253,6 +268,7 @@ class GameRoom {
     if(this.players.length <= 0) {
       destroyRoom(this.name);
     }
+    this.update();
   }
   
   // Make sure player does not spawn in a wall.
@@ -265,7 +281,7 @@ class GameRoom {
   
   // Start game timer.
   startTimer() {
-    this.game_time = 20;
+    this.game_time = GAME_TIME;
     this.game_timer = setInterval(this.updateTimer.bind(this), 1000);
   }
   

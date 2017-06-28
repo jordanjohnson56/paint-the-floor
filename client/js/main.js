@@ -150,7 +150,7 @@ $(function() {
   function updateReadyButton(toggle = false) {
     var ready_btn = $('#ready-button');
     var is_ready = ready_btn.attr('state') == 'is-ready';
-    if(my_player.host) {
+    if(my_player !== undefined && my_player.host) {
       $(ready_btn).removeClass().addClass('btn btn-primary');
       $(ready_btn).attr('state', 'host');
       $(ready_btn).html('Start Game <i class="fa fa-arrow-circle-right" aria-hidden="true"></i>');
@@ -201,6 +201,13 @@ $(function() {
   socket.on('game_over', function(state) {
     getStateInfo(state);
     game_over = true;
+  });
+  
+  // Error if not all players are ready.
+  socket.on('players_not_ready', function() {
+    if(my_player.host) {
+      showError('Not all players are ready.');
+    }
   });
   
   // Updates client's game state information based on server state.
