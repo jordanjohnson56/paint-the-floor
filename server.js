@@ -276,8 +276,9 @@ class GameRoom {
     }
     if(this.players.length <= 0) {
       destroyRoom(this.name);
+    } else {
+      this.update();
     }
-    this.update();
   }
   
   // Make sure player does not spawn in a wall.
