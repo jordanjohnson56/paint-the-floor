@@ -10,10 +10,19 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var path = require('path');
 
+var ip = process.argv[2] || undefined;
+var port = process.argv[3] || process.env.PORT || 8080;
+
 // Default server setup.
-http.listen(Number(process.argv[3]), process.argv[2], function() {
-  console.log('listening on ' + process.argv[2] + ':' + process.argv[3]);
-});
+if(ip !== undefined) {
+  http.listen(port, ip, function() {
+    console.log('listening on ' + ip + ':' + port);
+  });
+} else {
+  http.listen(port, function() {
+    console.log('listening on ' + ip + ':' + port);
+  });
+}
 
 // Look for resources in these folders.
 app.use('/css', express.static(path.join('client', 'css')));
