@@ -45,6 +45,7 @@ const COLORS = [
   '#FFEF00',  // yellow
   '#686868'   // gray
 ];
+const STRING_LEN = 16;  // Maximum length of a name.
 const GRID_WIDTH = 75;  // Number of horizontal grid tiles.
 const GRID_HEIGHT = 40; // Number of vertical grid tiles.
 const MAX_PLAYERS = 4;  // Number of players allowed in room.
@@ -364,11 +365,15 @@ io.sockets.on('connection', function(client) {
     var player_name = data.player_name.toString();
     var room_code = data.room_code.toString();
     
-    console.log('Player ' + player_name + ' is connecting to room '
-                + room_code + '.');
-    
-    // Connect player to room if possible, otherwise send error.
-    ifJoinRoom(room_code, player_name);
+    if(player_name.length <= STRING_LEN) {
+      console.log('Player ' + player_name + ' is connecting to room '
+                  + room_code + '.');
+      
+      // Connect player to room if possible, otherwise send error.
+      ifJoinRoom(room_code, player_name);
+    } else {
+      client.emit('could_not_join_room');
+    }
   });
   
   // Create a new room if possible.
@@ -376,10 +381,14 @@ io.sockets.on('connection', function(client) {
     var player_name = data.player_name.toString();
     var room_code = data.room_code.toString();
     
-    console.log('Creating room. Name: ' + room_code);
-    
-    if(createRoom(room_code)) {
-      ifJoinRoom(room_code, player_name);
+    if(room_code.length <= STRING_LEN) {
+      console.log('Creating room. Name: ' + room_code);
+      
+      if(createRoom(room_code)) {
+        ifJoinRoom(room_code, player_name);
+      } else {
+        client.emit('could_not_create_room');
+      }
     } else {
       client.emit('could_not_create_room');
     }
@@ -415,7 +424,7 @@ io.sockets.on('connection', function(client) {
       // Add player to room
       joinRoom(room, player);
       // Notify client
-      client.emit('joined_room', player);
+      client.emit('joined_room', {player, room_name});
     } else {
       client.emit('could_not_join_room');
     }

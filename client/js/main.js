@@ -61,13 +61,17 @@ $(function() {
     var room_input = $('#room-code').val();
     if(!has_joined) {
       if(name_input != '') {
-        if(name_input.length <= 12) {
+        if(name_input.length <= 16) {
           if(room_input != '') {
-            // Tell the server
-            socket.emit('create_room', {
-              player_name: name_input,
-              room_code: room_input
-            });
+            if(room_input.length <= 16) {
+              // Tell the server
+              socket.emit('create_room', {
+                player_name: name_input,
+                room_code: room_input
+              });
+            } else {
+              showError('Please enter a shorter room code.')
+            }
           } else {
             showError('Please enter a room code.');
           }
@@ -92,17 +96,18 @@ $(function() {
   });
   
   // Notification that a room was successfully joined.
-  socket.on('joined_room', function(player) {
+  socket.on('joined_room', function(data) {
     // Remove the join screen
     $('#join').css("display", "none");
     has_joined = true;
     
-    my_id = player.id;
-    my_player = player;
+    my_id = data.player.id;
+    my_player = data.player;
     
     updateReadyButton();
     
     $('#room').css("display", "flex");
+    $('#room-name').html("Room: " + data.room_name);
   });
   
   // Notification that a new player has joined lobby.
