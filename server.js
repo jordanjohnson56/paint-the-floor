@@ -1,3 +1,9 @@
+/* TODO
+ * Check for host leaving a lobby.
+ * Add leave lobby functionality.
+ * Add start game functionality.
+ */
+
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -38,7 +44,6 @@ const VIEW_WIDTH = 30;  // Number of horizontal grid tiles shown to player.
 const VIEW_HEIGHT = 16; // Number of vertical grid tiles shown to player.
 
 var rooms = {};         // List of currently created rooms.
-var intervals = {};     // Array of intervals created to update the rooms.
 
 class GameRoom {
   // Sets room name, grid width and height, sets all grid tiles to white,
@@ -49,6 +54,8 @@ class GameRoom {
     this.grid_h = GRID_HEIGHT;
     this.grid_state = [];
     this.game_interval;
+    this.game_over = false;
+    this.lobby = true;
   
     for(var i = 0; i < this.grid_w; i++) {
       this.grid_state[i] = [];
@@ -59,35 +66,35 @@ class GameRoom {
     
     // AI
     // Note: will be changed once lobbies are set up.
-    this.player1 = {
-      id: '1',
-      name: 'blinky',
-      x: Math.floor(Math.random() * this.grid_w),
-      y: Math.floor(Math.random() * this.grid_h),
-      color: COLORS[1],
-      dir: Math.floor(Math.random() * 4),
-      score: 0
-    };
+    // this.player1 = {
+    //   id: '1',
+    //   name: 'blinky',
+    //   x: Math.floor(Math.random() * this.grid_w),
+    //   y: Math.floor(Math.random() * this.grid_h),
+    //   color: COLORS[1],
+    //   dir: Math.floor(Math.random() * 4),
+    //   score: 0
+    // };
     
-    this.player2 = {
-      id: '2',
-      name: 'inky',
-      x: Math.floor(Math.random() * this.grid_w),
-      y: Math.floor(Math.random() * this.grid_h),
-      color: COLORS[2],
-      dir: Math.floor(Math.random() * 4),
-      score: 0
-    };
+    // this.player2 = {
+    //   id: '2',
+    //   name: 'inky',
+    //   x: Math.floor(Math.random() * this.grid_w),
+    //   y: Math.floor(Math.random() * this.grid_h),
+    //   color: COLORS[2],
+    //   dir: Math.floor(Math.random() * 4),
+    //   score: 0
+    // };
     
-    this.player3 = {
-      id: '3',
-      name: 'pinky',
-      x: Math.floor(Math.random() * this.grid_w),
-      y: Math.floor(Math.random() * this.grid_h),
-      color: COLORS[3],
-      dir: Math.floor(Math.random() * 4),
-      score: 0
-    };
+    // this.player3 = {
+    //   id: '3',
+    //   name: 'pinky',
+    //   x: Math.floor(Math.random() * this.grid_w),
+    //   y: Math.floor(Math.random() * this.grid_h),
+    //   color: COLORS[3],
+    //   dir: Math.floor(Math.random() * 4),
+    //   score: 0
+    // };
     
     // this.player4 = {
     //   id: '4',
@@ -100,9 +107,9 @@ class GameRoom {
     
     // Array of all players in the room.
     this.players = [
-      this.player1,
-      this.player2,
-      this.player3
+      // this.player1,
+      // this.player2,
+      // this.player3
       // this.player4
     ];
     
@@ -112,27 +119,27 @@ class GameRoom {
     this.drawRectObstacle(this.center_w - 8, this.center_h - 4, 16, 8);
     
     // Confirm that the AI don't spawn in a wall.
-    this.verifyPosition(this.player1);
-    this.verifyPosition(this.player2);
-    this.verifyPosition(this.player3);
+    // this.verifyPosition(this.player1);
+    // this.verifyPosition(this.player2);
+    // this.verifyPosition(this.player3);
     // this.verifyPosition(this.player4);
-    
-    this.startTimer();
-    this.game_over = false;
   }
   
-  // Start the game loop.
+  // Start the game loop and game timer.
   startGame() {
+    console.log("starting game: " + this.name);
     this.game_interval = setInterval(this.updateGame.bind(this), GAME_TICK);
+    this.startTimer();
+    io.to(this.name).emit('snapshot_start', this.roomState);
   }
   
   // Main game loop for this room. Gets put into a setInterval function.
   updateGame() {
     if(!this.game_over) {
       // Give AI random move directions.
-      this.player1.dir = Math.floor(Math.random() * 4);
-      this.player2.dir = Math.floor(Math.random() * 4);
-      this.player3.dir = Math.floor(Math.random() * 4);
+      // this.player1.dir = Math.floor(Math.random() * 4);
+      // this.player2.dir = Math.floor(Math.random() * 4);
+      // this.player3.dir = Math.floor(Math.random() * 4);
       // this.player4.dir = Math.floor(Math.random() * 4);
       
       // Update each of the player positions based on direction.
@@ -203,15 +210,24 @@ class GameRoom {
     }
   }
   
+  // Update room state.
+  update() {
+    if(this.lobby) {
+      io.to(this.name).emit('lobby_update', this.players);
+    }
+  }
+  
   createPlayer(id, player_name) {
     var player = {
       id: id,
       name: player_name,
       x: Math.floor(Math.random() * GRID_WIDTH),
       y: Math.floor(Math.random() * GRID_HEIGHT),
-      color: COLORS[4],
+      color: COLORS[this.size + 1],
       dir: Math.floor(Math.random() * 4),
-      score: 0
+      score: 0,
+      host: this.size == 0,
+      ready: false
     };
     return player;
   }
@@ -221,6 +237,7 @@ class GameRoom {
     if(this.size < MAX_PLAYERS) {
       this.verifyPosition(player);
       this.players.push(player);
+      io.to(this.name).emit('lobby_update', this.players);
     }
   }
   
@@ -230,7 +247,10 @@ class GameRoom {
     if(index >= 0) {
       this.players.splice(index, 1);
     }
-    if(this.players.length <= 4) {
+    if(this.lobby) {
+      io.to(this.name).emit('lobby_update', this.players);
+    }
+    if(this.players.length <= 0) {
       destroyRoom(this.name);
     }
   }
@@ -322,7 +342,7 @@ io.sockets.on('connection', function(client) {
                 + room_code + '.');
     
     // Connect player to room if possible, otherwise send error.
-    ifJoinRoom(room_code);
+    ifJoinRoom(room_code, player_name);
   });
   
   // Create a new room if possible.
@@ -339,6 +359,14 @@ io.sockets.on('connection', function(client) {
     }
   });
   
+  // Update player's ready state.
+  client.on('player_ready', function(is_ready) {
+    if(player !== undefined) {
+      player.ready = is_ready;
+      updateRoom(room);
+    }
+  });
+  
   // Update player's direction.
   client.on('direction', function(dir) {
     if(player !== undefined) {
@@ -346,18 +374,22 @@ io.sockets.on('connection', function(client) {
     }
   });
   
+  client.on('start_game', function() {
+    if(player !== undefined && player.host) {
+      startGame(room);
+    }
+  });
+  
   // Join a room if possible.
   function ifJoinRoom(room_name, player_name) {
     if(canJoinRoom(room_name)) {
       room = room_name;
-      player = createPlayer(client.id, player_name);
+      player = createPlayer(room, client.id, player_name);
       client.join(room);
       // Add player to room
       joinRoom(room, player);
       // Notify client
       client.emit('joined_room', player);
-      // Send initial snapshot of game board
-      client.emit('snapshot_start', getRoomState(room));
     } else {
       client.emit('could_not_join_room');
     }
@@ -400,17 +432,22 @@ function joinRoom(room_name, player) {
   }
 }
 
-// Remove a player from a specific room.
+// Tell a room that there is an update.
+function updateRoom(room_name) {
+  if(room_name in rooms) {
+    rooms[room_name].update();
+  }
+}
+
+function startGame(room_name) {
+  if(room_name in rooms) {
+    rooms[room_name].startGame();
+  }
+}
+
+// Remove a player from a room.
 function leaveRoom(room_name, player) {
   if(room_name in rooms) {
     rooms[room_name].removePlayer(player);
   }
-}
-
-// Get room state for new players
-function getRoomState(room_name) {
-  if(room_name in rooms) {
-    return rooms[room_name].roomState;
-  }
-  return {};
 }

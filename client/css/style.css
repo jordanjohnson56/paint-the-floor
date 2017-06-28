@@ -36,16 +36,18 @@ h1, input, button, li {
 
 .info-box {
     padding: 20px;
+    background: gray;
     background: rgba(50, 50, 50, 0.3);
     border: 1px solid rgb(100, 100, 100);
+    border-radius: 4px;
 }
 
 #join {
-    display: none;
+    /*display: none;*/
 }
 
 #room {
-    /*display: none;*/
+    display: none;
 }
 
 .info-box li {

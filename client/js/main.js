@@ -1,3 +1,8 @@
+/* TODO
+ * Add leave lobby button.
+ * How to play.
+ */
+
 /* global io */
 /* global $ */
 $(function() {
@@ -13,7 +18,7 @@ $(function() {
   var players = [];       // Current player stats.
   var can_render = false; // Has client received first snapshot?
   var game_over = false;  // Has the game ended?
-  var my_id, my_player;   // Client's player id and associated object.
+  var my_id, my_player;   // Client's player id and associated player object.
   var game_time;          // Current time left in the game.
   var splash = true;      // Show the splash screen canvas?
 
@@ -89,38 +94,89 @@ $(function() {
   // Notification that a room was successfully joined.
   socket.on('joined_room', function(player) {
     // Remove the join screen
-    $('#join').remove();
+    $('#join').css("display", "none");
     has_joined = true;
     
     my_id = player.id;
-
-    // Create the canvas
-    createCanvas();
-    // Start the rendering loop
-    window.requestAnimationFrame(draw);
+    my_player = player;
+    
+    updateReadyButton();
+    
+    $('#room').css("display", "flex");
   });
+  
+  // Notification that a new player has joined lobby.
+  socket.on('lobby_update', function(players) {
+    if(players[0] !== undefined) {
+      $('#player-one').html(players[0].name + ' ' + 
+                            (hostIcon(players[0]) || readyIcon(players[0])));
+    } else {
+      $('#player-one').html('');
+    }
+    
+    if(players[1] !== undefined) {
+      $('#player-two').html(players[1].name + ' ' + 
+                            (hostIcon(players[1]) || readyIcon(players[1])));
+    } else {
+      $('#player-two').html('');
+    }
+    
+    if(players[2] !== undefined) {
+      $('#player-three').html(players[2].name + ' ' + 
+                            (hostIcon(players[2]) || readyIcon(players[2])));
+    } else {
+      $('#player-three').html('');
+    }
+    
+    if(players[3] !== undefined) {
+      $('#player-four').html(players[3].name + ' ' + 
+                            (hostIcon(players[3]) || readyIcon(players[3])));
+    } else {
+      $('#player-four').html('');
+    }
+    
+    updatePlayer(players);
+    updateReadyButton();
+  });
+  
+  function hostIcon(player) {
+    return player.host ? '<i class="fa fa-h-square"></i>' : '';
+  }
+  
+  function readyIcon(player) {
+    return player.ready ? '<i class="fa fa-check"></i>' : '';
+  }
+  
+  function updateReadyButton(toggle = false) {
+    var ready_btn = $('#ready-button');
+    var is_ready = ready_btn.attr('state') == 'is-ready';
+    if(my_player.host) {
+      $(ready_btn).removeClass().addClass('btn btn-primary');
+      $(ready_btn).attr('state', 'host');
+      $(ready_btn).html('Start Game <i class="fa fa-arrow-circle-right" aria-hidden="true"></i>');
+    } else if((is_ready || toggle) && !(is_ready && toggle)) {
+      $(ready_btn).removeClass().addClass("btn btn-success");
+      $(ready_btn).attr('state', 'is-ready');
+      $(ready_btn).html('<i class="fa fa-check"></i> Ready');
+    } else {
+      $(ready_btn).removeClass().addClass('btn btn-danger');
+      $(ready_btn).attr('state', 'not-ready');
+      $(ready_btn).html('<i class="fa fa-times"></i> Ready');
+    }
+  }
   
   // Ready button in the lobby.
   $('#ready').submit(function(e) {
     e.preventDefault();
     var button = $('#ready button')[0];
-    var player2 = $('#player-two');
-    var player3 = $('#player-three');
-    var player4 = $('#player-four');
     if($(button).attr("state") == "not-ready") {
-      $(button).attr("state", "is-ready");
-      $(button).removeClass().addClass("btn btn-success");
-      $(button).html('<i class="fa fa-check"></i> Ready');
-      player2.html('Player Two <i class="fa fa-check"></i>');
-      player3.html('Player Three <i class="fa fa-check"></i>');
-      player4.html('Player Four <i class="fa fa-check"></i>');
+      updateReadyButton(true);
+      socket.emit('player_ready', true);
+    } else if($(button).attr("state") == "is-ready") {
+      updateReadyButton(true);
+      socket.emit('player_ready', false);
     } else {
-      $(button).attr("state", "not-ready");
-      $(button).removeClass().addClass("btn btn-danger");
-      $(button).html('<i class="fa fa-times"></i> Ready');
-      player2.html('Player Two');
-      player3.html('Player Three');
-      player4.html('Player Four');
+      socket.emit('start_game');
     }
   });
   
@@ -136,7 +192,9 @@ $(function() {
   // rendering the game.
   socket.on('snapshot_start', function(state) {
     getStateInfo(state);
+    disableSplash();
     can_render = true;
+    window.requestAnimationFrame(draw);
   });
   
   // Final game state when game ends.
@@ -156,11 +214,22 @@ $(function() {
     view_w = state.view_w;
     view_h = state.view_h;
     
-    players.forEach(function(player) {
-      if(player.id == my_id) my_player = player;
-    });
+    updatePlayer(players);
     
     game_time = state.game_time;
+  }
+  
+  function updatePlayer(players) {
+    if(my_id !== undefined) {
+      players.forEach(function(player) {
+        if(player.id == my_id) my_player = player;
+      });
+    }
+  }
+  
+  function disableSplash() {
+    splash = false;
+    $('#room').css("display", "none");
   }
   
   // Watch for arrow key presses and send this information to the server so that
