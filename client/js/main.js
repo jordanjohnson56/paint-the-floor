@@ -70,7 +70,7 @@ $(function() {
                 room_code: room_input
               });
             } else {
-              showError('Please enter a shorter room code.')
+              showError('Please enter a shorter room code.');
             }
           } else {
             showError('Please enter a room code.');
@@ -83,6 +83,18 @@ $(function() {
       }
     }
     return false;
+  });
+  
+  $('#how-to-play-go').submit(function(e) {
+    e.preventDefault();
+    $('#join').css("display", "none");
+    $('#how-to-play').css("display", "flex");
+  });
+  
+  $('#how-to-play-back').submit(function(e) {
+    e.preventDefault();
+    $('#how-to-play').css("display", "none");
+    $('#join').css("display", "flex");
   });
   
   // Error returned when a room cannot be created.

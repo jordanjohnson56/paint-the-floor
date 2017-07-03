@@ -13,7 +13,7 @@ canvas {
     padding: 0;
 }
 
-h1, input, button, li {
+h1, input, button, li, .card {
     font-family: 'Anonymous Pro', monospace;
 }
 
@@ -48,6 +48,15 @@ h1, input, button, li {
 
 #room {
     display: none;
+}
+
+#how-to-play {
+    display: none;
+}
+
+#how-to-play button {
+    margin-top: 16px;
+    width: 35%;
 }
 
 .info-box li {
