@@ -587,6 +587,12 @@ $(function() {
   // Show an error message.
   function showError(error) {
     console.error(error);
+    var error_elem = $("<div class=\"error alert alert-danger\">"
+      + "<strong>Error: </strong> " + error + "</div>");
+    $(error_elem).appendTo("#errors").show()
+      .delay(400).fadeOut(1000, function() {
+        $(error_elem).remove();
+    });
   }
   
   // Utility to contain a value within a minimum and maximum.

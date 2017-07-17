@@ -84,3 +84,17 @@ h1, input, button, li, .card {
 #ready button {
     width: 35%;
 }
+
+#errors {
+    display: block;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    max-height: 25%;
+    overflow-y: hidden;
+}
+
+.error {
+    display: none;
+}

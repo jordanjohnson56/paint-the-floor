@@ -20,7 +20,7 @@ if(ip !== undefined) {
   });
 } else {
   http.listen(port, function() {
-    console.log('listening on ' + ip + ':' + port);
+    console.log('listening on 0.0.0.0:' + port);
   });
 }
 
