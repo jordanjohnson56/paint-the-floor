@@ -1,7 +1,5 @@
 /* TODO
- * Check for host leaving a lobby.
  * Add leave lobby functionality.
- * Add start game functionality.
  */
 
 var express = require('express');

@@ -1,6 +1,5 @@
 /* TODO
  * Add leave lobby button.
- * How to play.
  */
 
 /* global io */
@@ -528,6 +527,7 @@ $(function() {
     c.fillText(winner.score, x, score_y);
   }
   
+  // Show background grid on splash screen.
   function drawSplash() {
     if(c !== undefined && splash) {
       // Clear canvas.
@@ -540,6 +540,7 @@ $(function() {
     window.requestAnimationFrame(drawSplash);
   }
   
+  // Fill background grid on splash.
   function fillGridSplash() {
     var c_width = canvas.width;
     var c_height = canvas.height;
@@ -565,14 +566,6 @@ $(function() {
       
       c.strokeStyle = '#000';
       c.lineWidth = 8;
-      // players.forEach(function(player) {
-      //   var rel_x = player.x - view_x;
-      //   var rel_y = player.y - view_y;
-      //   var x = rel_x * gap_w + Math.ceil(c.lineWidth / 2) + 1;
-      //   var y = rel_y * gap_h + Math.ceil(c.lineWidth / 2) + 1;
-      //   c.strokeRect(x, y, gap_w - 2 * (Math.ceil(c.lineWidth / 2) + 1),
-      //                     gap_h - 2 * (Math.ceil(c.lineWidth / 2) + 1));
-      // });
     }
   }
   
