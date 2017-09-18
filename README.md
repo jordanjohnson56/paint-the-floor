@@ -14,6 +14,7 @@ Then start the server:
 ```
 node server <ip-address> <port>
 ```
+Or visit [Heroku](http://rocky-anchorage-30253.herokuapp.com/) to play the latest version.
 
 ### <a name="about"></a> About Paint the Floor
 Paint the Floor is a game idea I thought up along with a friend of mine. As it turns out, I developed the game alone, which was alright by me because it was an excellent learning experience. I'd always wanted to make my own multiplayer game, just to figure out what networking is like, and I finally had my idea and my opportunity. 
